@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>札幌スマホ検討</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        h1 { text-align: center; color: #333; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #00a497; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        img { max-width: 80px; height: auto; }
+        .loading { text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>スマホ比較表</h1>
+        <div id="loading" class="loading">データを読み込み中...</div>
+        <table id="spec-table" style="display: none;">
+            <thead>
+                <tr id="table-header"></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // 先ほどコピーしたGASのウェブアプリURLをここに貼り付け
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwycU-w3bFlYiMjI1v0qn5lSe703M54eBgxJUUyU0KpUn5yTp-qzPLozhzW9YgpUjoS/exec";
+
+        async function fetchData() {
+            try {
+                const response = await fetch(GAS_URL);
+                const data = await response.json();
+                renderTable(data);
+            } catch (error) {
+                document.getElementById('loading').innerText = "データの取得に失敗しました。";
+                console.error(error);
+            }
+        }
+
+        function renderTable(data) {
+            if (data.length === 0) return;
+
+            const headerRow = document.getElementById('table-header');
+            const body = document.getElementById('table-body');
+            const keys = Object.keys(data[0]);
+
+            // ヘッダーの生成
+            keys.forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+
+            // 行の生成
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                keys.forEach(key => {
+                    const td = document.createElement('td');
+                    if (key === "画像URL" && item[key]) {
+                        td.innerHTML = `<img src="${item[key]}" alt="phone">`;
+                    } else {
+                        td.textContent = item[key];
+                    }
+                    tr.appendChild(td);
+                });
+                body.appendChild(tr);
+            });
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('spec-table').style.display = 'table';
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>
