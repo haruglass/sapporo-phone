@@ -5,62 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>スマホ比較</title>
     <style>
-        /* 全体の余白をゼロにする */
-        body { font-family: sans-serif; background-color: #f4f7f6; margin: 0; padding: 5px; color: #333; line-height: 1.2; }
-        .container { width: 100%; margin: 0 auto; }
-        h1 { text-align: center; font-size: 16px; margin: 5px 0; }
+        body { font-family: sans-serif; background-color: #f4f7f6; margin: 0; padding: 10px; color: #333; }
+        .container { width: 100%; }
+        h1 { text-align: center; font-size: 18px; margin-bottom: 15px; }
 
-        /* 表のレイアウト設定：画面幅いっぱいに固定 */
+        /* スクロールや固定を一切排除した表の設定 */
         table { 
             width: 100%; 
-            table-layout: fixed; /* 列の幅を強制固定 */
             border-collapse: collapse; 
             background: white; 
-            font-size: 11px; /* 文字を小さくして収める */
+            font-size: 12px;
+            table-layout: auto; /* コンテンツに合わせて幅を調整 */
         }
 
         th, td { 
             border: 1px solid #ccc; 
-            padding: 4px 2px; 
+            padding: 8px 4px; 
             text-align: center; 
             vertical-align: middle;
-            word-break: break-all; /* 長い単語で枠が広がらないようにする */
-            overflow: hidden;
         }
 
-        /* A列（項目名）の幅を狭く固定 */
+        /* A列（項目名）のスタイル：固定を解除 */
         .row-label { 
-            background-color: #444; 
+            background-color: #555; 
             color: white; 
-            font-weight: bold; 
-            width: 50px; /* 項目名は最小限に */
+            font-weight: bold;
+            width: 70px; /* 項目名の幅を少し確保 */
         }
 
         tr:nth-child(even) { background-color: #f9f9f9; }
 
-        /* 画像サイズを劇的に小さくして一画面に収める */
+        /* 画像の設定 */
         img { 
             width: 100%; 
-            max-width: 60px; /* 3-4列並んでも大丈夫なサイズ */
+            max-width: 80px; 
             height: auto; 
             display: block; 
             margin: auto; 
         }
 
-        /* ボタンも最小限のサイズに */
         .btn-link { 
             color: #0066cc; 
-            text-decoration: underline; 
-            font-size: 10px;
+            text-decoration: none; 
+            font-size: 11px;
+            border-bottom: 1px solid #0066cc;
         }
 
-        .loading { text-align: center; padding: 20px; font-size: 14px; }
+        .loading { text-align: center; padding: 30px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>スマホスペック比較</h1>
-        <div id="loading" class="loading">読込中...</div>
+        <div id="loading" class="loading">データを読み込み中...</div>
         <table id="spec-table" style="display: none;">
             <tbody id="table-body"></tbody>
         </table>
@@ -75,7 +72,7 @@
                 const data = await response.json();
                 renderTable(data);
             } catch (error) {
-                document.getElementById('loading').innerText = "エラー";
+                document.getElementById('loading').innerText = "読み込みエラー";
             }
         }
 
@@ -88,6 +85,7 @@
                 const rowHeaderName = String(row[0]).trim();
 
                 row.forEach((cellValue, index) => {
+                    // 全ての行・列において sticky（固定）の設定はしていません
                     const td = document.createElement(index === 0 ? 'th' : 'td');
                     if (index === 0) td.className = "row-label";
 
