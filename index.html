@@ -3,77 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スマホ比較</title>
+    <title>スマホ比較表</title>
     <style>
-        * { box-sizing: border-box; }
-        body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 10px; color: #333; }
-        h1 { text-align: center; font-size: 1.2rem; margin: 10px 0; color: #1a1a1a; }
-        
-        /* カード全体のコンテナ */
-        #card-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
-            max-width: 800px;
-            margin: auto;
-        }
-
-        /* 端末ごとのカードスタイル */
-        .card {
-            background: white;
-            border-radius: 12px;
-            padding: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* 画像エリア */
-        .img-wrapper {
-            width: 100%;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 8px;
-            background: #fff;
-        }
-        img { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-        /* スペック情報エリア */
-        .spec-list { width: 100%; font-size: 0.8rem; }
-        .spec-item {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #eee;
-            padding: 4px 0;
-        }
-        .spec-label { color: #777; font-weight: bold; margin-right: 5px; flex-shrink: 0; }
-        .spec-value { text-align: right; word-break: break-all; }
-
-        /* ボタン */
-        .btn-link {
-            display: block;
-            width: 100%;
-            text-align: center;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            padding: 8px 0;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-size: 0.8rem;
-        }
-
+        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; color: #333; }
+        .container { max-width: 100%; overflow-x: auto; margin: auto; }
+        h1 { text-align: center; margin-bottom: 30px; }
+        table { border-collapse: collapse; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: auto; }
+        th, td { border: 1px solid #ddd; padding: 15px; text-align: center; min-width: 160px; vertical-align: middle; }
+        /* A列（項目名）のスタイル */
+        .row-label { background-color: #444; color: white; font-weight: bold; position: sticky; left: 0; z-index: 5; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        img { max-width: 200px; max-height: 200px; object-fit: contain; border-radius: 8px; display: block; margin: auto; }
         .loading { text-align: center; padding: 50px; font-weight: bold; }
+        .btn-link { color: #0066cc; text-decoration: none; font-weight: bold; border: 1px solid #0066cc; padding: 5px 10px; border-radius: 4px; display: inline-block; }
     </style>
 </head>
 <body>
-    <h1>スマホ比較表</h1>
-    <div id="loading" class="loading">読込中...</div>
-    <div id="card-container"></div>
+    <div class="container">
+        <h1>スマホスペック比較表</h1>
+        <div id="loading" class="loading">最新データを読み込み中...</div>
+        <table id="spec-table" style="display: none;">
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
 
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbwycU-w3bFlYiMjI1v0qn5lSe703M54eBgxJUUyU0KpUn5yTp-qzPLozhzW9YgpUjoS/exec";
@@ -82,55 +34,52 @@
             try {
                 const response = await fetch(`${GAS_URL}?t=${new Date().getTime()}`);
                 const data = await response.json();
-                renderCards(data);
+                renderTable(data);
             } catch (error) {
-                document.getElementById('loading').innerText = "エラーが発生しました。";
+                document.getElementById('loading').innerText = "データの取得に失敗しました。";
             }
         }
 
-        function renderCards(data) {
-            const container = document.getElementById('card-container');
-            const rowCount = data.length; // 行数
-            const colCount = data[0].length; // 列数（端末数+1）
+        function renderTable(data) {
+            const body = document.getElementById('table-body');
+            body.innerHTML = ""; // 中身を一度空にする
 
-            // 端末の数だけカードを作成（1列目はラベルなので index=1 から開始）
-            for (let j = 1; j < colCount; j++) {
-                const card = document.createElement('div');
-                card.className = 'card';
+            data.forEach((row) => {
+                const tr = document.createElement('tr');
+                // A列（項目名）を取得。ここが「画像」かどうかを判定に使う
+                const rowHeaderName = String(row[0]).trim();
 
-                const specList = document.createElement('div');
-                specList.className = 'spec-list';
+                row.forEach((cellValue, index) => {
+                    const td = document.createElement(index === 0 ? 'th' : 'td');
+                    if (index === 0) td.className = "row-label";
 
-                let imgHtml = "";
-                let btnHtml = "";
+                    const val = cellValue ? String(cellValue).trim() : "";
 
-                // スプレッドシートの各行をループ
-                for (let i = 0; i < rowCount; i++) {
-                    const label = String(data[i][0]).trim(); // A列の見出し
-                    const value = data[i][j] ? String(data[i][j]).trim() : "-";
-
-                    if (label.includes("画像") && value.startsWith("http")) {
-                        imgHtml = `<div class="img-wrapper"><img src="${value}" alt="phone"></div>`;
-                    } else if (value.startsWith("http")) {
-                        btnHtml = `<a href="${value}" target="_blank" rel="noopener" class="btn-link">詳細・購入</a>`;
-                    } else {
-                        // 通常のテキスト情報
-                        specList.innerHTML += `
-                            <div class="spec-item">
-                                <span class="spec-label">${label}</span>
-                                <span class="spec-value">${value}</span>
-                            </div>`;
+                    // --- 判定ロジック ---
+                    
+                    // 1. A列（項目名）自体を表示
+                    if (index === 0) {
+                        td.textContent = val;
+                    } 
+                    // 2. A列が「画像」という名前の行、かつURLが入っている場合 → <img>タグを表示
+                    else if (rowHeaderName.includes("画像") && val.startsWith("http")) {
+                        td.innerHTML = `<img src="${val}" alt="スマホ画像">`;
+                    } 
+                    // 3. それ以外のURL（購入ページなど） → リンクボタンを表示
+                    else if (val.startsWith("http")) {
+                        td.innerHTML = `<a href="${val}" target="_blank" rel="noopener" class="btn-link">詳細を見る</a>`;
+                    } 
+                    // 4. 通常のテキスト
+                    else {
+                        td.textContent = val;
                     }
-                }
-
-                card.innerHTML = imgHtml;
-                card.appendChild(specList);
-                if (btnHtml) card.innerHTML += btnHtml;
-                
-                container.appendChild(card);
-            }
+                    tr.appendChild(td);
+                });
+                body.appendChild(tr);
+            });
 
             document.getElementById('loading').style.display = 'none';
+            document.getElementById('spec-table').style.display = 'table';
         }
 
         fetchData();
