@@ -3,25 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スマホ比較表</title>
+    <title>スマホ比較</title>
     <style>
-        body { font-family: sans-serif; background-color: #f4f7f6; padding: 20px; color: #333; }
-        .container { max-width: 100%; overflow-x: auto; margin: auto; }
-        h1 { text-align: center; margin-bottom: 30px; }
-        table { border-collapse: collapse; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: auto; }
-        th, td { border: 1px solid #ddd; padding: 15px; text-align: center; min-width: 160px; vertical-align: middle; }
-        /* A列（項目名）のスタイル */
-        .row-label { background-color: #444; color: white; font-weight: bold; position: sticky; left: 0; z-index: 5; }
+        /* 全体の余白をゼロにする */
+        body { font-family: sans-serif; background-color: #f4f7f6; margin: 0; padding: 5px; color: #333; line-height: 1.2; }
+        .container { width: 100%; margin: 0 auto; }
+        h1 { text-align: center; font-size: 16px; margin: 5px 0; }
+
+        /* 表のレイアウト設定：画面幅いっぱいに固定 */
+        table { 
+            width: 100%; 
+            table-layout: fixed; /* 列の幅を強制固定 */
+            border-collapse: collapse; 
+            background: white; 
+            font-size: 11px; /* 文字を小さくして収める */
+        }
+
+        th, td { 
+            border: 1px solid #ccc; 
+            padding: 4px 2px; 
+            text-align: center; 
+            vertical-align: middle;
+            word-break: break-all; /* 長い単語で枠が広がらないようにする */
+            overflow: hidden;
+        }
+
+        /* A列（項目名）の幅を狭く固定 */
+        .row-label { 
+            background-color: #444; 
+            color: white; 
+            font-weight: bold; 
+            width: 50px; /* 項目名は最小限に */
+        }
+
         tr:nth-child(even) { background-color: #f9f9f9; }
-        img { max-width: 200px; max-height: 200px; object-fit: contain; border-radius: 8px; display: block; margin: auto; }
-        .loading { text-align: center; padding: 50px; font-weight: bold; }
-        .btn-link { color: #0066cc; text-decoration: none; font-weight: bold; border: 1px solid #0066cc; padding: 5px 10px; border-radius: 4px; display: inline-block; }
+
+        /* 画像サイズを劇的に小さくして一画面に収める */
+        img { 
+            width: 100%; 
+            max-width: 60px; /* 3-4列並んでも大丈夫なサイズ */
+            height: auto; 
+            display: block; 
+            margin: auto; 
+        }
+
+        /* ボタンも最小限のサイズに */
+        .btn-link { 
+            color: #0066cc; 
+            text-decoration: underline; 
+            font-size: 10px;
+        }
+
+        .loading { text-align: center; padding: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>スマホスペック比較表</h1>
-        <div id="loading" class="loading">最新データを読み込み中...</div>
+        <h1>スマホスペック比較</h1>
+        <div id="loading" class="loading">読込中...</div>
         <table id="spec-table" style="display: none;">
             <tbody id="table-body"></tbody>
         </table>
@@ -36,17 +75,16 @@
                 const data = await response.json();
                 renderTable(data);
             } catch (error) {
-                document.getElementById('loading').innerText = "データの取得に失敗しました。";
+                document.getElementById('loading').innerText = "エラー";
             }
         }
 
         function renderTable(data) {
             const body = document.getElementById('table-body');
-            body.innerHTML = ""; // 中身を一度空にする
+            body.innerHTML = "";
 
             data.forEach((row) => {
                 const tr = document.createElement('tr');
-                // A列（項目名）を取得。ここが「画像」かどうかを判定に使う
                 const rowHeaderName = String(row[0]).trim();
 
                 row.forEach((cellValue, index) => {
@@ -55,21 +93,15 @@
 
                     const val = cellValue ? String(cellValue).trim() : "";
 
-                    // --- 判定ロジック ---
-                    
-                    // 1. A列（項目名）自体を表示
                     if (index === 0) {
                         td.textContent = val;
                     } 
-                    // 2. A列が「画像」という名前の行、かつURLが入っている場合 → <img>タグを表示
                     else if (rowHeaderName.includes("画像") && val.startsWith("http")) {
-                        td.innerHTML = `<img src="${val}" alt="スマホ画像">`;
+                        td.innerHTML = `<img src="${val}" alt="img">`;
                     } 
-                    // 3. それ以外のURL（購入ページなど） → リンクボタンを表示
                     else if (val.startsWith("http")) {
-                        td.innerHTML = `<a href="${val}" target="_blank" rel="noopener" class="btn-link">詳細を見る</a>`;
+                        td.innerHTML = `<a href="${val}" target="_blank" rel="noopener" class="btn-link">詳細</a>`;
                     } 
-                    // 4. 通常のテキスト
                     else {
                         td.textContent = val;
                     }
